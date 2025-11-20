@@ -5,7 +5,7 @@ import { parsePrintCode } from '@/lib/printParser';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, Edit, MoreVertical } from 'lucide-react';
+import { ChevronDown, ChevronUp, Edit, MoreVertical, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,9 +20,10 @@ interface OrderBookTableProps {
   currentUser: 'divo' | 'nomad';
   onEdit: (order: Order) => void;
   onStatusChange: (orderId: string, status: Order['status']) => void;
+  onDelete: (orderId: string) => void;
 }
 
-export function OrderBookTable({ orders, settings, currentUser, onEdit, onStatusChange }: OrderBookTableProps) {
+export function OrderBookTable({ orders, settings, currentUser, onEdit, onStatusChange, onDelete }: OrderBookTableProps) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const toggleRow = (id: string) => {
@@ -40,12 +41,14 @@ export function OrderBookTable({ orders, settings, currentUser, onEdit, onStatus
       received: 'bg-status-received text-white',
       made: 'bg-status-made text-white',
       picked_up: 'bg-status-picked text-white',
+      paid: 'bg-green-600 text-white',
     };
 
     const labels = {
       received: 'Received',
       made: 'Made',
       picked_up: 'Picked Up',
+      paid: 'Paid',
     };
 
     return (
@@ -153,6 +156,20 @@ export function OrderBookTable({ orders, settings, currentUser, onEdit, onStatus
                         {order.status !== 'picked_up' && (
                           <DropdownMenuItem onClick={() => onStatusChange(order.id, 'picked_up')}>
                             Mark as Picked Up
+                          </DropdownMenuItem>
+                        )}
+                        {order.status !== 'paid' && (
+                          <DropdownMenuItem onClick={() => onStatusChange(order.id, 'paid')}>
+                            Mark as Paid
+                          </DropdownMenuItem>
+                        )}
+                        {currentUser === 'divo' && (
+                          <DropdownMenuItem 
+                            onClick={() => onDelete(order.id)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete Order
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>

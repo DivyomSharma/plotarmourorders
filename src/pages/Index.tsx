@@ -100,6 +100,16 @@ const Index = () => {
     });
   };
 
+  const handleDeleteOrder = (orderId: string) => {
+    const updated = orders.filter(o => o.id !== orderId);
+    setOrders(updated);
+    saveOrders(updated);
+    toast({
+      title: 'Order deleted',
+      description: 'Order has been removed successfully',
+    });
+  };
+
   const handleSettingsSave = (newSettings: Settings) => {
     setSettings(newSettings);
     saveSettings(newSettings);
@@ -194,6 +204,7 @@ const Index = () => {
                 <SelectItem value="received">Received</SelectItem>
                 <SelectItem value="made">Made</SelectItem>
                 <SelectItem value="picked_up">Picked Up</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -210,6 +221,7 @@ const Index = () => {
             setShowAddDialog(true);
           }}
           onStatusChange={handleStatusChange}
+          onDelete={handleDeleteOrder}
         />
 
         <GrandTotals orders={filteredOrders} settings={settings} />

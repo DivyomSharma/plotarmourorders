@@ -1,4 +1,4 @@
-export type OrderStatus = 'received' | 'made' | 'picked_up';
+export type OrderStatus = 'received' | 'made' | 'picked_up' | 'paid';
 
 export type UserRole = 'divo' | 'nomad';
 

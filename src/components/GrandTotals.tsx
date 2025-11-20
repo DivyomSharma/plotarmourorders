@@ -10,6 +10,13 @@ interface GrandTotalsProps {
 
 export function GrandTotals({ orders, settings }: GrandTotalsProps) {
   const totals = calculateGrandTotals(orders, settings);
+  
+  // Split orders into paid and unpaid
+  const paidOrders = orders.filter(o => o.status === 'paid');
+  const unpaidOrders = orders.filter(o => o.status !== 'paid');
+  
+  const paidTotals = calculateGrandTotals(paidOrders, settings);
+  const unpaidTotals = calculateGrandTotals(unpaidOrders, settings);
 
   return (
     <Card>
@@ -79,6 +86,19 @@ export function GrandTotals({ orders, settings }: GrandTotalsProps) {
             <div className="flex justify-between">
               <span className="font-semibold text-primary">Grand Total (with Print):</span>
               <span className="font-bold text-lg text-primary">₹{totals.grandTotalWithPrint.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="grid gap-3 pt-2">
+            <div className="flex justify-between">
+              <span className="font-semibold text-green-600">Paid Amount:</span>
+              <span className="font-bold text-lg text-green-600">₹{paidTotals.grandTotalWithPrint.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-semibold text-orange-600">Balance Amount:</span>
+              <span className="font-bold text-lg text-orange-600">₹{unpaidTotals.grandTotalWithPrint.toFixed(2)}</span>
             </div>
           </div>
         </div>
