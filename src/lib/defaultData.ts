@@ -17,6 +17,7 @@ export const defaultSettings: Settings = {
     'A3': 120,
     'A4': 30,
   },
+  designs: {},
   neckLabelPrice: 30,
   packagingPrice: 30,
   gstRate: 5,
