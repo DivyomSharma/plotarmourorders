@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Order, Settings } from '@/types/order';
-import { loadOrders, saveOrders, loadSettings, saveSettings, getCurrentUser, setCurrentUser } from '@/lib/storage';
+import { loadOrders, saveOrder, deleteOrder, loadSettings, saveSettings, getCurrentUser, setCurrentUser } from '@/lib/storage';
 import { exportToCSV } from '@/lib/export';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { OrderBookTable } from '@/components/OrderBookTable';
@@ -30,12 +31,55 @@ const Index = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const loadedOrders = loadOrders();
-    const loadedSettings = loadSettings();
-    const user = getCurrentUser();
-    setOrders(loadedOrders);
-    setSettings(loadedSettings);
-    setCurrentUserState(user);
+    const loadData = async () => {
+      const loadedOrders = await loadOrders();
+      const loadedSettings = await loadSettings();
+      const user = getCurrentUser();
+      setOrders(loadedOrders);
+      setSettings(loadedSettings);
+      setCurrentUserState(user);
+    };
+    
+    loadData();
+
+    // Set up realtime subscription for orders
+    const ordersChannel = supabase
+      .channel('orders-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders'
+        },
+        async () => {
+          const loadedOrders = await loadOrders();
+          setOrders(loadedOrders);
+        }
+      )
+      .subscribe();
+
+    // Set up realtime subscription for settings
+    const settingsChannel = supabase
+      .channel('settings-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'settings'
+        },
+        async () => {
+          const loadedSettings = await loadSettings();
+          setSettings(loadedSettings);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(ordersChannel);
+      supabase.removeChannel(settingsChannel);
+    };
   }, []);
 
   const handleUserChange = (user: 'divo' | 'nomad') => {
@@ -47,72 +91,106 @@ const Index = () => {
     });
   };
 
-  const handleAddOrder = (orderData: Omit<Order, 'id' | 'datetime' | 'status' | 'last_modified_by'>) => {
+  const handleAddOrder = async (orderData: Omit<Order, 'id' | 'datetime' | 'status' | 'last_modified_by'>) => {
     const newOrder: Order = {
       ...orderData,
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       datetime: new Date().toISOString(),
       status: 'received',
       last_modified_by: currentUser,
     };
-    const updated = [newOrder, ...orders];
-    setOrders(updated);
-    saveOrders(updated);
-    toast({
-      title: 'Order created',
-      description: 'New order has been added successfully',
-    });
+    
+    try {
+      await saveOrder(newOrder);
+      toast({
+        title: 'Order created',
+        description: 'New order has been added successfully',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to create order',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleEditOrder = (orderData: Omit<Order, 'id' | 'datetime' | 'status' | 'last_modified_by'>) => {
+  const handleEditOrder = async (orderData: Omit<Order, 'id' | 'datetime' | 'status' | 'last_modified_by'>) => {
     if (!editingOrder) return;
     
-    const updated = orders.map(o => 
-      o.id === editingOrder.id 
-        ? { 
-            ...o, 
-            ...orderData, 
-            last_modified_by: currentUser,
-            // Keep original datetime when editing
-            datetime: editingOrder.datetime,
-            status: editingOrder.status,
-          }
-        : o
-    );
-    setOrders(updated);
-    saveOrders(updated);
-    setEditingOrder(undefined);
-    toast({
-      title: 'Order updated',
-      description: 'Changes have been saved successfully',
-    });
+    const updatedOrder: Order = {
+      ...editingOrder,
+      ...orderData,
+      last_modified_by: currentUser,
+    };
+    
+    try {
+      await saveOrder(updatedOrder);
+      setEditingOrder(undefined);
+      toast({
+        title: 'Order updated',
+        description: 'Changes have been saved successfully',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update order',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleStatusChange = (orderId: string, status: Order['status']) => {
-    const updated = orders.map(o =>
-      o.id === orderId ? { ...o, status, last_modified_by: currentUser } : o
-    );
-    setOrders(updated);
-    saveOrders(updated);
-    toast({
-      title: 'Status updated',
-      description: `Order marked as ${status.replace('_', ' ')}`,
-    });
+  const handleStatusChange = async (orderId: string, status: Order['status']) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+    
+    const updatedOrder = { ...order, status, last_modified_by: currentUser };
+    
+    try {
+      await saveOrder(updatedOrder);
+      toast({
+        title: 'Status updated',
+        description: `Order marked as ${status.replace('_', ' ')}`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update status',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleDeleteOrder = (orderId: string) => {
-    const updated = orders.filter(o => o.id !== orderId);
-    setOrders(updated);
-    saveOrders(updated);
-    toast({
-      title: 'Order deleted',
-      description: 'Order has been removed successfully',
-    });
+  const handleDeleteOrder = async (orderId: string) => {
+    try {
+      await deleteOrder(orderId);
+      toast({
+        title: 'Order deleted',
+        description: 'Order has been removed successfully',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete order',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleSettingsSave = (newSettings: Settings) => {
-    setSettings(newSettings);
-    saveSettings(newSettings);
+  const handleSettingsSave = async (newSettings: Settings) => {
+    try {
+      await saveSettings(newSettings);
+      toast({
+        title: 'Settings saved',
+        description: 'Your settings have been updated successfully',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to save settings',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleExport = () => {
