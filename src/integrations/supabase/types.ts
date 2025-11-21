@@ -62,6 +62,7 @@ export type Database = {
       settings: {
         Row: {
           created_at: string
+          designs: Json
           gst_applies_to_print: boolean
           gst_rate: number
           id: string
@@ -75,6 +76,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          designs?: Json
           gst_applies_to_print?: boolean
           gst_rate?: number
           id?: string
@@ -88,6 +90,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          designs?: Json
           gst_applies_to_print?: boolean
           gst_rate?: number
           id?: string

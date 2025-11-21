@@ -77,6 +77,24 @@ export function SettingsPage({ settings, onSave, onBack }: SettingsPageProps) {
     });
   };
 
+  const addDesign = () => {
+    const name = prompt('Enter design name:');
+    if (name && !localSettings.designs[name]) {
+      setLocalSettings({
+        ...localSettings,
+        designs: { ...localSettings.designs, [name]: name },
+      });
+    }
+  };
+
+  const removeDesign = (name: string) => {
+    const { [name]: _, ...rest } = localSettings.designs;
+    setLocalSettings({
+      ...localSettings,
+      designs: rest,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -156,6 +174,32 @@ export function SettingsPage({ settings, onSave, onBack }: SettingsPageProps) {
             <Button variant="outline" size="sm" onClick={addPrintCode}>
               <Plus className="mr-2 h-4 w-4" />
               Add Print Code
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Saved Designs</CardTitle>
+            <CardDescription>Manage frequently used design names</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {Object.entries(localSettings.designs).map(([name]) => (
+              <div key={name} className="flex items-center gap-3">
+                <Label className="flex-1">{name}</Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeDesign(name)}
+                  className="text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            <Button variant="outline" size="sm" onClick={addDesign}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Design
             </Button>
           </CardContent>
         </Card>

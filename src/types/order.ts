@@ -32,6 +32,7 @@ export interface PrintPrice {
 export interface Settings {
   products: ProductPrice;
   prints: PrintPrice;
+  designs: { [key: string]: string };
   neckLabelPrice: number;
   packagingPrice: number;
   gstRate: number;

@@ -1,4 +1,4 @@
-import { Order, Settings } from '@/types/order';
+import { Order, Settings, OrderItem, OrderStatus, UserRole } from '@/types/order';
 import { supabase } from '@/integrations/supabase/client';
 
 const USER_KEY = 'plotarmour_current_user';
@@ -14,13 +14,35 @@ export async function loadOrders(): Promise<Order[]> {
     return [];
   }
   
-  return data as Order[];
+  return (data || []).map(row => ({
+    id: row.id,
+    datetime: row.datetime,
+    customer_name: row.customer_name || undefined,
+    design: row.design,
+    items: row.items as any as OrderItem[],
+    print_code: row.print_code || '',
+    status: row.status as OrderStatus,
+    created_by: row.created_by as UserRole,
+    last_modified_by: row.last_modified_by as UserRole,
+    notes: row.notes || undefined,
+  }));
 }
 
 export async function saveOrder(order: Order): Promise<void> {
   const { error } = await supabase
     .from('orders')
-    .upsert(order);
+    .upsert({
+      id: order.id,
+      datetime: order.datetime,
+      customer_name: order.customer_name,
+      design: order.design,
+      items: order.items as any,
+      print_code: order.print_code,
+      status: order.status,
+      created_by: order.created_by,
+      last_modified_by: order.last_modified_by,
+      notes: order.notes,
+    });
   
   if (error) {
     console.error('Error saving order:', error);
@@ -53,6 +75,7 @@ export async function loadSettings(): Promise<Settings> {
     return {
       products: {},
       prints: {},
+      designs: {},
       neckLabelPrice: 30,
       packagingPrice: 30,
       gstRate: 5,
@@ -65,6 +88,7 @@ export async function loadSettings(): Promise<Settings> {
   return {
     products: data.product_prices as Record<string, number>,
     prints: data.print_prices as Record<string, number>,
+    designs: data.designs as Record<string, string>,
     neckLabelPrice: data.neck_label_price,
     packagingPrice: data.packaging_price,
     gstRate: Number(data.gst_rate),
@@ -80,6 +104,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
     .upsert({
       product_prices: settings.products,
       print_prices: settings.prints,
+      designs: settings.designs,
       neck_label_price: settings.neckLabelPrice,
       packaging_price: settings.packagingPrice,
       gst_rate: settings.gstRate,
