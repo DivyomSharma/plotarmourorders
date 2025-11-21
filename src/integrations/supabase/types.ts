@@ -14,7 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      orders: {
+        Row: {
+          created_at: string
+          customer_name: string | null
+          datetime: string
+          design: string
+          id: string
+          items: Json
+          notes: string | null
+          print_code: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_name?: string | null
+          datetime?: string
+          design: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          print_code?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string | null
+          datetime?: string
+          design?: string
+          id?: string
+          items?: Json
+          notes?: string | null
+          print_code?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      settings: {
+        Row: {
+          created_at: string
+          gst_applies_to_print: boolean
+          gst_rate: number
+          id: string
+          neck_label_mode: string
+          neck_label_price: number
+          packaging_mode: string
+          packaging_price: number
+          print_prices: Json
+          product_prices: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          gst_applies_to_print?: boolean
+          gst_rate?: number
+          id?: string
+          neck_label_mode?: string
+          neck_label_price?: number
+          packaging_mode?: string
+          packaging_price?: number
+          print_prices?: Json
+          product_prices?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          gst_applies_to_print?: boolean
+          gst_rate?: number
+          id?: string
+          neck_label_mode?: string
+          neck_label_price?: number
+          packaging_mode?: string
+          packaging_price?: number
+          print_prices?: Json
+          product_prices?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
