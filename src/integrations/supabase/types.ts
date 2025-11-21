@@ -17,11 +17,13 @@ export type Database = {
       orders: {
         Row: {
           created_at: string
+          created_by: string
           customer_name: string | null
           datetime: string
           design: string
           id: string
           items: Json
+          last_modified_by: string
           notes: string | null
           print_code: string | null
           status: string
@@ -29,11 +31,13 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          created_by?: string
           customer_name?: string | null
           datetime?: string
           design: string
           id?: string
           items?: Json
+          last_modified_by?: string
           notes?: string | null
           print_code?: string | null
           status?: string
@@ -41,11 +45,13 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          created_by?: string
           customer_name?: string | null
           datetime?: string
           design?: string
           id?: string
           items?: Json
+          last_modified_by?: string
           notes?: string | null
           print_code?: string | null
           status?: string
