@@ -99,9 +99,17 @@ export async function loadSettings(): Promise<Settings> {
 }
 
 export async function saveSettings(settings: Settings): Promise<void> {
+  // First, get the existing settings id
+  const { data: existing } = await supabase
+    .from('settings')
+    .select('id')
+    .limit(1)
+    .maybeSingle();
+  
   const { error } = await supabase
     .from('settings')
     .upsert({
+      id: existing?.id,
       product_prices: settings.products,
       print_prices: settings.prints,
       designs: settings.designs,
